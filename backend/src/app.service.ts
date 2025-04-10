@@ -5,12 +5,16 @@ import { LucidService } from './lucid/lucid.service';
 import {
   Constr,
   Data,
+  fromText,
+  MintingPolicy,
+  mintingPolicyToId,
   paymentCredentialOf,
   SpendingValidator,
+  toUnit,
   validatorToAddress,
 } from '@lucid-evolution/lucid';
 import { ResponseDetails } from './interfaces/response-interface';
-import { LockDto, UnlockDto } from './dtos/dtos';
+import { LockDto, MintBurnDto, UnlockDto } from './dtos/dtos';
 
 @Injectable()
 export class AppService {
@@ -24,7 +28,7 @@ export class AppService {
     const network = this.blockfrostService.getNetwork();
     const wallet = await this.lucidService.getOrCreateWallet(walletName);
 
-    const validatorJSON = await this.valiadatorService.getValidator(0);
+    const validatorJSON = await this.valiadatorService.getValidator(2);
     const spendingValidator: SpendingValidator = {
       type: validatorJSON.plutusVersion,
       script: validatorJSON.validator.compiledCode,
@@ -70,7 +74,7 @@ export class AppService {
     const network = this.blockfrostService.getNetwork();
     const wallet = await this.lucidService.getOrCreateWallet(walletName);
 
-    const validatorJSON = await this.valiadatorService.getValidator(0);
+    const validatorJSON = await this.valiadatorService.getValidator(2);
     const spendingValidator: SpendingValidator = {
       type: validatorJSON.plutusVersion,
       script: validatorJSON.validator.compiledCode,
@@ -94,6 +98,90 @@ export class AppService {
         .collectFrom([utxoToSpend], redeemer)
         .attach.SpendingValidator(spendingValidator)
         .addSignerKey(paymentCredentialOf(await wallet.wallet().address()).hash)
+        .complete();
+
+      const signedTx = await tx.sign.withWallet().complete();
+      const txHash = await signedTx.submit();
+
+      return {
+        walletAddress: await wallet.wallet().address(),
+        scriptAddress: contractAddress,
+        txHash: txHash,
+      };
+    } catch (e) {
+      return {
+        walletAddress: await wallet.wallet().address(),
+        scriptAddress: contractAddress,
+        errorMessage: `${e}`,
+      };
+    }
+  }
+  async mint(mintDto: MintBurnDto): Promise<ResponseDetails> {
+    const { walletName, amount, assetName } = mintDto;
+    const network = this.blockfrostService.getNetwork();
+    const wallet = await this.lucidService.getOrCreateWallet(walletName);
+
+    const validatorJSON = await this.valiadatorService.getValidator(0);
+    const mintingValidator: MintingPolicy = {
+      type: validatorJSON.plutusVersion,
+      script: validatorJSON.validator.compiledCode,
+    };
+    const contractAddress = validatorToAddress(network!, mintingValidator);
+
+    const mintRedeemer = Data.to(new Constr(0, []));
+
+    const policyId = mintingPolicyToId(mintingValidator);
+    const asset = toUnit(policyId, fromText(assetName));
+
+    try {
+      const tx = await wallet
+        .newTx()
+        .mintAssets({ [asset]: BigInt(amount) }, mintRedeemer)
+        .attach.MintingPolicy(mintingValidator)
+        .pay.ToAddress(await wallet.wallet().address(), {
+          [asset]: BigInt(amount),
+        })
+        .complete();
+
+      const signedTx = await tx.sign.withWallet().complete();
+      const txHash = await signedTx.submit();
+
+      return {
+        walletAddress: await wallet.wallet().address(),
+        scriptAddress: contractAddress,
+        txHash: txHash,
+      };
+    } catch (e) {
+      return {
+        walletAddress: await wallet.wallet().address(),
+        scriptAddress: contractAddress,
+        errorMessage: `${e}`,
+      };
+    }
+  }
+
+  async burn(burnDto: MintBurnDto): Promise<ResponseDetails> {
+    const { walletName, amount, assetName } = burnDto;
+    const network = this.blockfrostService.getNetwork();
+    const wallet = await this.lucidService.getOrCreateWallet(walletName);
+
+    const validatorJSON = await this.valiadatorService.getValidator(0);
+    const mintingValidator: MintingPolicy = {
+      type: validatorJSON.plutusVersion,
+      script: validatorJSON.validator.compiledCode,
+    };
+    const contractAddress = validatorToAddress(network!, mintingValidator);
+
+    const burnRedeemer = Data.to(new Constr(1, []));
+
+    const policyId = mintingPolicyToId(mintingValidator);
+    const asset = toUnit(policyId, fromText(assetName));
+
+    try {
+      const tx = await wallet
+        .newTx()
+        .mintAssets({ [asset]: BigInt(-amount) }, burnRedeemer)
+        .attach.MintingPolicy(mintingValidator)
         .complete();
 
       const signedTx = await tx.sign.withWallet().complete();

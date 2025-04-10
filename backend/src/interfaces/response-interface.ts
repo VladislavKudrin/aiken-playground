@@ -7,7 +7,7 @@ export interface ResponseDetails {
 }
 
 export interface Response {
-  action: 'LOCK' | 'UNLOCK';
+  action: 'LOCK' | 'UNLOCK' | 'MINT' | 'BURN';
   walletName: string;
   status: 'OK' | 'ERROR';
   details: ResponseDetails;

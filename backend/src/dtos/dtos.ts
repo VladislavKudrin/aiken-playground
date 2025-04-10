@@ -18,3 +18,14 @@ export class UnlockDto {
   @IsString()
   walletName: string;
 }
+
+export class MintBurnDto {
+  @IsNumber()
+  amount: number;
+
+  @IsString()
+  assetName: string;
+
+  @IsString()
+  walletName: string;
+}
