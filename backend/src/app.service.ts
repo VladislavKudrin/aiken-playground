@@ -27,8 +27,7 @@ export class AppService {
     const { walletName, amount } = lockDto;
     const network = this.blockfrostService.getNetwork();
     const wallet = await this.lucidService.getOrCreateWallet(walletName);
-
-    const validatorJSON = await this.valiadatorService.getValidator(2);
+    const validatorJSON = await this.valiadatorService.getValidator(5);
     const spendingValidator: SpendingValidator = {
       type: validatorJSON.plutusVersion,
       script: validatorJSON.validator.compiledCode,
@@ -40,7 +39,6 @@ export class AppService {
         paymentCredentialOf(await wallet.wallet().address()).hash,
       ]),
     );
-
     try {
       const tx = await wallet
         .newTx()
@@ -74,7 +72,7 @@ export class AppService {
     const network = this.blockfrostService.getNetwork();
     const wallet = await this.lucidService.getOrCreateWallet(walletName);
 
-    const validatorJSON = await this.valiadatorService.getValidator(2);
+    const validatorJSON = await this.valiadatorService.getValidator(5);
     const spendingValidator: SpendingValidator = {
       type: validatorJSON.plutusVersion,
       script: validatorJSON.validator.compiledCode,
@@ -126,6 +124,7 @@ export class AppService {
       type: validatorJSON.plutusVersion,
       script: validatorJSON.validator.compiledCode,
     };
+    console.log(validatorJSON.validator.compiledCode);
     const contractAddress = validatorToAddress(network!, mintingValidator);
 
     const mintRedeemer = Data.to(new Constr(0, []));

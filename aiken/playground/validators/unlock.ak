@@ -1,4 +1,4 @@
-use aiken/primitive/bytearray
+// use aiken/primitive/bytearray
 use cardano/transaction.{OutputReference, Transaction}
 use playground/helpers as helpers
 use playground/types.{LockDatum, LockRedeemer, Unlock}
@@ -12,7 +12,7 @@ validator unlock {
   ) {
     let Unlock = redeemer
     expect Some(LockDatum { owner }) = datum
-    trace bytearray.to_hex(owner)
+    // trace bytearray.to_hex(owner)
     helpers.tx_signed_by(self, owner)
   }
 

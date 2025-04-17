@@ -5,7 +5,6 @@ import {
   LucidEvolution,
 } from '@lucid-evolution/lucid';
 import { Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { promises as fs } from 'fs';
 import * as fsSync from 'fs';
 import * as path from 'path';
@@ -30,7 +29,6 @@ export class LucidService {
   async getOrCreatePk(name: string) {
     const filePath = path.join(this.walletPath, `${name}.sk`);
     let privateKey: string | null = null;
-
     if (!fsSync.existsSync(filePath)) {
       privateKey = generatePrivateKey();
       try {
@@ -47,6 +45,7 @@ export class LucidService {
 
   async getOrCreateWallet(name: string): Promise<LucidEvolution> {
     const privateKey = await this.getOrCreatePk(name);
+    console.log(privateKey);
     const lucid = await this.getLucid();
     lucid.selectWallet.fromPrivateKey(privateKey);
     return lucid;

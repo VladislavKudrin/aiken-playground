@@ -1,7 +1,7 @@
 use aiken/crypto.{VerificationKeyHash}
 use cardano/address.{Address, Script}
 use cardano/assets.{Value}
-use cardano/transaction.{OutputReference}
+use cardano/transaction.{Datum, Input, Output, OutputReference}
 
 pub fn vkey(hash: ByteArray) -> VerificationKeyHash {
   let vkey = crypto.blake2b_224(hash)
@@ -28,4 +28,16 @@ pub fn scriptAddress(hash: ByteArray) -> Address {
     Address { payment_credential: Script(hash), stake_credential: None }
 
   address
+}
+
+pub fn output(addr: Address, value: Value, datum: Datum) -> Output {
+  let output = Output { address: addr, value, datum, reference_script: None }
+
+  output
+}
+
+pub fn input(oref: OutputReference, output: Output) -> Input {
+  let input = Input { output_reference: oref, output }
+
+  input
 }

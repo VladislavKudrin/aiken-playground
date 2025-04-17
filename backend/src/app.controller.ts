@@ -24,7 +24,6 @@ export class AppController {
       if (lockDto.walletName.length == 0 || lockDto.amount == 0) {
         throw new Error('Define amount or wallet name');
       }
-
       const lockResult = await this.appService.lock(lockDto);
 
       return {
